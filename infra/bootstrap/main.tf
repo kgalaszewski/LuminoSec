@@ -9,11 +9,21 @@ terraform {
 }
 
 provider "aws" {
-  region  = "eu-central-1"
-  profile = "luminosec-terraform"
+  region = var.aws_region
 }
 
 data "aws_caller_identity" "current" {}
+
+# The cleanest setup would have this bucket provisioned by a separate,
+# earlier Terraform workspace, so this config never manages the very
+# bucket that (eventually) holds its own state. For this project's
+# scope that's accepted as unnecessary overhead: the bucket is created
+# manually in the AWS Console (see SETUP-INSTRUKCJE.txt) and brought
+# under management here via the import block below instead.
+import {
+  to = aws_s3_bucket.tf_state
+  id = "luminosec-terraform-state-${data.aws_caller_identity.current.account_id}"
+}
 
 resource "aws_s3_bucket" "tf_state" {
   bucket = "luminosec-terraform-state-${data.aws_caller_identity.current.account_id}"

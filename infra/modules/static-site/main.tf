@@ -31,12 +31,6 @@ resource "aws_s3_bucket_ownership_controls" "site" {
   }
 }
 
-# Content is NOT managed here — Terraform owns only the infra
-# (bucket, CloudFront, DNS). Uploading the actual site content
-# (Angular's dist/ build output) is a CI/CD step, not Terraform's
-# job — aws s3 sync ./dist s3://<bucket> --delete + CloudFront
-# invalidation.
-
 # --- ACM certificate (must live in us-east-1 for CloudFront) ---
 
 resource "aws_acm_certificate" "site" {
@@ -113,25 +107,30 @@ resource "aws_cloudfront_distribution" "site" {
   }
 }
 
+data "aws_iam_policy_document" "site" {
+  statement {
+    sid     = "AllowCloudFrontServicePrincipal"
+    effect  = "Allow"
+    actions = ["s3:GetObject"]
+
+    resources = ["${aws_s3_bucket.site.arn}/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.site.arn]
+    }
+  }
+}
+
 resource "aws_s3_bucket_policy" "site" {
   bucket = aws_s3_bucket.site.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "AllowCloudFrontServicePrincipal"
-        Effect    = "Allow"
-        Principal = { Service = "cloudfront.amazonaws.com" }
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.site.arn}/*"
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.site.arn
-          }
-        }
-      }
-    ]
-  })
+  policy = data.aws_iam_policy_document.site.json
 }
 
 # --- DNS: point domain_name at the CloudFront distribution ---

@@ -6,6 +6,5 @@ terraform {
     region         = "eu-central-1"
     dynamodb_table = "luminosec-terraform-locks"
     encrypt        = true
-    profile        = "luminosec-terraform"
   }
 }
