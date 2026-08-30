@@ -1,0 +1,128 @@
+================================================================
+ LUMINOSEC — INSTRUKCJA: HELLO WORLD NA luminosec.com (TERRAFORM)
+ Zapisano: 2026-08-06
+================================================================
+
+CEL: wystawić statyczny "Hello World" pod https://luminosec.com
+przez S3 + CloudFront + ACM + Route53, jako walking-skeleton testu
+DNS/certyfikatu i jednocześnie docelowej architektury hostingu
+frontendu LuminoSec.
+
+STATUS: pliki Terraform GOTOWE w tym repo. NIC jeszcze nie zostało
+odpalone na AWS (brak terraform apply, brak IAM usera, brak
+skonfigurowanego AWS CLI profilu). AWS CLI zainstalowany (2.36.17).
+
+STRUKTURA (zaktualizowana 2026-08-12 — modules/envs layout):
+  infra/bootstrap/            — S3 state bucket + DynamoDB lock (bez zmian)
+  infra/modules/static-site/  — reużywalny moduł: S3+CloudFront+ACM+Route53
+  infra/modules/network/      — placeholder, puste (VPC/subnety, faza ECS/RDS)
+  infra/modules/app-service/  — placeholder, puste (ECS Fargate, faza walking skeleton)
+  infra/modules/database/     — placeholder, puste (RDS, faza walking skeleton)
+  infra/envs/dev/             — odpala moduł static-site z domain_name=luminosec.com
+  infra/envs/stg/             — puste na razie
+  infra/envs/prod/            — puste na razie
+
+To, co wcześniej nazywało się "infra/hello-world", jest teraz
+rozbite na infra/modules/static-site (logika, reużywalna) +
+infra/envs/dev (konkretne parametry środowiska dev: domena,
+nazwa środowiska). Krok 4 poniżej odnosi się już do envs/dev.
+
+----------------------------------------------------------------
+KROK 1 — IAM user dla Terraforma (JEDYNY krok przez konsolę —
+nie da się zbootstrapować przez Terraform, bo Terraform potrzebuje
+właśnie tych credentials)
+----------------------------------------------------------------
+1. AWS Console (root) -> IAM -> Users -> Create user
+   -> nazwa: luminosec-terraform
+2. Attach policies directly -> Create policy -> zakładka JSON,
+   wklej:
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "TerraformStateS3", "Effect": "Allow", "Action": "s3:*",
+      "Resource": ["arn:aws:s3:::luminosec-*", "arn:aws:s3:::luminosec-*/*"] },
+    { "Sid": "TerraformStateLock", "Effect": "Allow", "Action": "dynamodb:*",
+      "Resource": "arn:aws:dynamodb:*:*:table/luminosec-terraform-locks" },
+    { "Sid": "CloudFront", "Effect": "Allow", "Action": "cloudfront:*", "Resource": "*" },
+    { "Sid": "ACM", "Effect": "Allow", "Action": "acm:*", "Resource": "*" },
+    { "Sid": "Route53", "Effect": "Allow", "Action": "route53:*", "Resource": "*" },
+    { "Sid": "Route53Domains", "Effect": "Allow", "Action": "route53domains:Get*", "Resource": "*" }
+  ]
+}
+
+   Nazwa policy: LuminoSecTerraformPolicy. Zapisz, wróć do usera,
+   podepnij ją. (Celowo węższe niż AdministratorAccess — rozszerzymy
+   przy fazie ECS/RDS.)
+3. User -> Security credentials -> Create access key -> use case:
+   Command Line Interface (CLI) -> pobierz Access Key ID + Secret.
+4. W terminalu:
+   aws configure --profile luminosec-terraform
+   -> Access Key ID, Secret, region: eu-central-1, output: json
+
+----------------------------------------------------------------
+KROK 2 — Bootstrap: S3 state bucket + DynamoDB lock table
+(local state na start)
+----------------------------------------------------------------
+cd C:\Users\karol\source\repos\luminosec\infra\bootstrap
+terraform init
+terraform plan
+terraform apply
+
+Zanotować output state_bucket_name:
+luminosec-terraform-state-<ACCOUNT_ID>
+
+----------------------------------------------------------------
+KROK 3 — Migracja bootstrap do remote state
+----------------------------------------------------------------
+Do infra/bootstrap/main.tf dopisać na górze (do istniejącego
+bloku terraform {}, nie tworzyć drugiego):
+
+  backend "s3" {
+    bucket         = "luminosec-terraform-state-<ACCOUNT_ID>"
+    key            = "bootstrap/terraform.tfstate"
+    region         = "eu-central-1"
+    dynamodb_table = "luminosec-terraform-locks"
+    encrypt        = true
+    profile        = "luminosec-terraform"
+  }
+
+Potem: terraform init -> na pytanie o skopiowanie local state do
+S3 odpowiedzieć "yes".
+
+----------------------------------------------------------------
+KROK 4 — Hello world stack, środowisko dev (S3 + CloudFront + ACM
++ Route53, przez moduł static-site)
+----------------------------------------------------------------
+W infra/envs/dev/backend.tf podmienić
+REPLACE_WITH_ACCOUNT_ID na faktyczny account ID z kroku 2.
+
+cd ..\envs\dev
+terraform init
+terraform plan
+terraform apply
+
+Co to tworzy: prywatny bucket S3 z index.html (Hello World),
+certyfikat ACM w us-east-1 (walidacja DNS, automatyczna przez
+rekordy w istniejącej hosted zone luminosec.com), CloudFront
+distribution z Origin Access Control, rekord ALIAS A
+luminosec.com -> CloudFront.
+
+UWAGA NA CZAS: walidacja ACM + propagacja CloudFront do edge
+locations potrafi trwać 10-20 minut — terraform apply będzie
+po prostu czekał, to normalne, nie przerywać.
+
+Po zakończeniu: https://luminosec.com powinno pokazać
+"Hello, World — LuminoSec is live."
+
+----------------------------------------------------------------
+KOSZTY
+----------------------------------------------------------------
+W ramach Free Tier: $0 (S3, CloudFront, ACM w typowym użyciu
+hello-world mieszczą się z dużym zapasem w limicie).
+Jedyny stały koszt: Hosted Zone Route53 $0.50/mc — już naliczany
+od momentu zakupu domeny, niezależny od tego stacku.
+
+================================================================
+KONIEC SETUP-INSTRUKCJE.txt
+================================================================
