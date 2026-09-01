@@ -14,34 +14,25 @@ provider "aws" {
 
 data "aws_caller_identity" "current" {}
 
-# The cleanest setup would have this bucket provisioned by a separate,
-# earlier Terraform workspace, so this config never manages the very
-# bucket that (eventually) holds its own state. For this project's
-# scope that's accepted as unnecessary overhead: the bucket is created
-# manually in the AWS Console (see SETUP-INSTRUKCJE.txt) and brought
-# under management here via the import block below instead.
-import {
-  to = aws_s3_bucket.tf_state
-  id = "luminosec-terraform-state-${data.aws_caller_identity.current.account_id}"
-}
-
-resource "aws_s3_bucket" "tf_state" {
+# This bucket is created and owned entirely outside Terraform (manually,
+# see SETUP-INSTRUKCJE.txt) — never a `resource`, never imported. That
+# keeps this stack from ever managing the very bucket that holds its
+# own state. Only the bucket's security configuration (versioning/
+# encryption/public access block below) is managed here, via a data
+# source lookup of the manually-created bucket.
+data "aws_s3_bucket" "tf_state" {
   bucket = "luminosec-terraform-state-${data.aws_caller_identity.current.account_id}"
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "aws_s3_bucket_versioning" "tf_state" {
-  bucket = aws_s3_bucket.tf_state.id
+  bucket = data.aws_s3_bucket.tf_state.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "tf_state" {
-  bucket = aws_s3_bucket.tf_state.id
+  bucket = data.aws_s3_bucket.tf_state.id
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -50,7 +41,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "tf_state" {
 }
 
 resource "aws_s3_bucket_public_access_block" "tf_state" {
-  bucket = aws_s3_bucket.tf_state.id
+  bucket = data.aws_s3_bucket.tf_state.id
 
   block_public_acls       = true
   block_public_policy     = true
