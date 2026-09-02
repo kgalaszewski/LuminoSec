@@ -6,6 +6,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket       = "luminosec-terraform-state-033855898717-eu-central-1-an"
+    key          = "bootstrap/terraform.tfstate"
+    region       = "eu-central-1"
+    use_lockfile = true
+    encrypt      = true
+  }
 }
 
 provider "aws" {
@@ -20,8 +28,11 @@ data "aws_caller_identity" "current" {}
 # own state. Only the bucket's security configuration (versioning/
 # encryption/public access block below) is managed here, via a data
 # source lookup of the manually-created bucket.
+#
+# Created in S3's account regional namespace (not global) — chosen
+# deliberately to avoid bucket-squatting.
 data "aws_s3_bucket" "tf_state" {
-  bucket = "luminosec-terraform-state-${data.aws_caller_identity.current.account_id}"
+  bucket = "luminosec-terraform-state-${data.aws_caller_identity.current.account_id}-${var.aws_region}-an"
 }
 
 resource "aws_s3_bucket_versioning" "tf_state" {
@@ -49,13 +60,29 @@ resource "aws_s3_bucket_public_access_block" "tf_state" {
   restrict_public_buckets = true
 }
 
-resource "aws_dynamodb_table" "tf_lock" {
-  name         = "luminosec-terraform-locks"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
+# SSE above covers encryption at rest; this covers encryption in
+# transit — denies any request to the bucket that isn't over TLS.
+data "aws_iam_policy_document" "tf_state_enforce_tls" {
+  statement {
+    sid       = "DenyInsecureTransport"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [data.aws_s3_bucket.tf_state.arn, "${data.aws_s3_bucket.tf_state.arn}/*"]
 
-  attribute {
-    name = "LockID"
-    type = "S"
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
   }
+}
+
+resource "aws_s3_bucket_policy" "tf_state_enforce_tls" {
+  bucket = data.aws_s3_bucket.tf_state.id
+  policy = data.aws_iam_policy_document.tf_state_enforce_tls.json
 }
