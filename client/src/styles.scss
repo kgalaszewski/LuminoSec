@@ -1,0 +1,35 @@
+:root {
+  --color-bg: #0a1830;
+  --color-bg-elevated: #0f2444;
+  --color-border: #1e3a63;
+  --color-text: #eaf1fb;
+  --color-text-muted: #8ea3c4;
+  --color-accent: #4f9dff;
+  --color-accent-contrast: #04101f;
+  --color-success: #34d399;
+  --color-danger: #f87171;
+
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(1200px circle at 85% -10%, rgba(79, 157, 255, 0.22), transparent 60%),
+    radial-gradient(900px circle at -10% 110%, rgba(52, 211, 153, 0.08), transparent 60%),
+    var(--color-bg);
+  background-attachment: fixed;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}

@@ -1,0 +1,70 @@
+<div class="page">
+  <header class="page__header">
+    <div class="brand">
+      <span class="brand__mark">Lumino<span class="brand__accent">Sec</span></span>
+      <span class="brand__tagline">Illuminate your security.</span>
+    </div>
+
+    <div
+      class="status"
+      [class.status--online]="apiStatus() === 'online'"
+      [class.status--offline]="apiStatus() === 'offline'"
+    >
+      <span class="status__dot"></span>
+      @switch (apiStatus()) {
+        @case ('checking') { API: checking… }
+        @case ('online') { API: online }
+        @case ('offline') { API: offline }
+      }
+    </div>
+  </header>
+
+  <main class="hero">
+    <h1>Security that explains itself.</h1>
+    <p class="hero__subtitle">
+      LuminoSec reviews your architecture, flags real risks, and helps you make sense
+      of bugs, incidents and alerts — in plain language.
+    </p>
+
+    <section class="analyze-card">
+      <label for="description">Describe your architecture</label>
+      <textarea
+        id="description"
+        rows="4"
+        [value]="description()"
+        (input)="onDescriptionInput($any($event.target).value)"
+      ></textarea>
+
+      <button type="button" (click)="runAnalysis()" [disabled]="isAnalyzing()">
+        @if (isAnalyzing()) {
+          Analyzing…
+        } @else {
+          Run analysis
+        }
+      </button>
+
+      @if (errorMessage()) {
+        <p class="error">{{ errorMessage() }}</p>
+      }
+
+      @if (result(); as r) {
+        <div class="result">
+          <div class="result__score">
+            <span class="result__score-value">{{ r.securityScore }}</span>
+            <span class="result__score-label">/ 100</span>
+          </div>
+          <p class="result__summary">{{ r.aiSummary }}</p>
+          <ul class="result__findings">
+            @for (finding of r.findings; track finding) {
+              <li>{{ finding }}</li>
+            }
+          </ul>
+        </div>
+      }
+    </section>
+  </main>
+
+  <footer class="page__footer">
+    <p>LuminoSec — portfolio project. AI responses shown here are currently mocked.</p>
+  </footer>
+</div>
