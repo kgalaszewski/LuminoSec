@@ -8,6 +8,12 @@ crash.log
 crash.*.log
 .terraform.lock.hcl.bak
 
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
 # OS
 .DS_Store
 Thumbs.db

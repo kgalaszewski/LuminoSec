@@ -1,0 +1,15 @@
+@LuminoSec.Api_HostAddress = http://localhost:5086
+
+GET {{LuminoSec.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+POST {{LuminoSec.Api_HostAddress}}/api/architecture-review/analyze
+Content-Type: application/json
+
+{
+  "architectureDescription": "A public S3 bucket connected directly to the internet with no WAF."
+}
+
+###
