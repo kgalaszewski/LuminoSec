@@ -1,6 +1,6 @@
 namespace LuminoSec.Api.Features.ArchitectureReview;
 
-public interface IArchitectureReviewService
+internal interface IArchitectureReviewService
 {
     Task<ArchitectureReviewResult> AnalyzeAsync(
         ArchitectureReviewRequest request,

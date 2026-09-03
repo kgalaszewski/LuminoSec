@@ -1,7 +1,6 @@
 namespace LuminoSec.Api.Ai;
 
-// Stand-in for the real Bedrock-backed implementation, wired up later.
-public sealed class MockLlmClient : ILlmClient
+internal sealed class LlmClient : ILlmClient
 {
     public Task<string> InvokeAsync(string prompt, CancellationToken cancellationToken = default)
     {

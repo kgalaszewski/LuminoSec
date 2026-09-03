@@ -1,8 +1,8 @@
 namespace LuminoSec.Api.Features.ArchitectureReview;
 
-public static class ArchitectureReviewEndpoints
+internal static class ArchitectureReviewEndpoints
 {
-    public static void MapArchitectureReviewEndpoints(this IEndpointRouteBuilder app)
+    internal static void MapArchitectureReviewEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/architecture-review/analyze", async (
                 ArchitectureReviewRequest request,

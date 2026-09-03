@@ -4,7 +4,7 @@ using LuminoSec.Api.Scoring;
 
 namespace LuminoSec.Api.Features.ArchitectureReview;
 
-public sealed class ArchitectureReviewService(
+internal sealed class ArchitectureReviewService(
     ILlmClient llmClient,
     IRulesEngine rulesEngine,
     ISecurityScorer securityScorer) : IArchitectureReviewService
