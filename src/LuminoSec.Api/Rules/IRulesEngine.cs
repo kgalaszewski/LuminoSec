@@ -1,4 +1,4 @@
-namespace LuminoSec.Api.RulesEngine;
+namespace LuminoSec.Api.Rules;
 
 internal interface IRulesEngine
 {

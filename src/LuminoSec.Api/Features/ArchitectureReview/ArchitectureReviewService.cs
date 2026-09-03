@@ -1,5 +1,5 @@
 using LuminoSec.Api.Ai;
-using LuminoSec.Api.RulesEngine;
+using LuminoSec.Api.Rules;
 using LuminoSec.Api.Scoring;
 
 namespace LuminoSec.Api.Features.ArchitectureReview;

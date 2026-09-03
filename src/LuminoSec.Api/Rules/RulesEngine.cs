@@ -1,6 +1,6 @@
-namespace LuminoSec.Api.RulesEngine;
+namespace LuminoSec.Api.Rules;
 
-internal sealed class StubRulesEngine : IRulesEngine
+internal sealed class RulesEngine : IRulesEngine
 {
     public IReadOnlyList<RuleFinding> Evaluate(string architectureDescription)
     {

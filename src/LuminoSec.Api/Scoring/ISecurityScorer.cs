@@ -1,4 +1,4 @@
-using LuminoSec.Api.RulesEngine;
+using LuminoSec.Api.Rules;
 
 namespace LuminoSec.Api.Scoring;
 
