@@ -1,0 +1,57 @@
+name: Deploy Frontend (dev)
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "client/**"
+      - ".github/workflows/deploy-frontend.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-central-1
+
+jobs:
+  deploy:
+    name: Build & Deploy Angular SPA (envs/dev)
+    runs-on: ubuntu-latest
+    environment: dev
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (production)
+        run: npm run build -- --configuration production
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Read site config from SSM Parameter Store
+        run: |
+          echo "SITE_BUCKET_NAME=$(aws ssm get-parameter --name /luminosec/dev/site-bucket-name --query Parameter.Value --output text)" >> "$GITHUB_ENV"
+          echo "CLOUDFRONT_DISTRIBUTION_ID=$(aws ssm get-parameter --name /luminosec/dev/cloudfront-distribution-id --query Parameter.Value --output text)" >> "$GITHUB_ENV"
+
+      - name: Sync to S3
+        run: aws s3 sync dist/luminosec-web/browser "s3://${SITE_BUCKET_NAME}" --delete
+
+      - name: Invalidate CloudFront cache
+        run: aws cloudfront create-invalidation --distribution-id "${CLOUDFRONT_DISTRIBUTION_ID}" --paths "/*"
