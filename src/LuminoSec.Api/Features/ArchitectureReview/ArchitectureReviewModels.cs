@@ -4,5 +4,6 @@ internal sealed record ArchitectureReviewRequest(string ArchitectureDescription)
 
 internal sealed record ArchitectureReviewResult(
     int SecurityScore,
+    string SecurityRating,
     string AiSummary,
     IReadOnlyList<string> Findings);

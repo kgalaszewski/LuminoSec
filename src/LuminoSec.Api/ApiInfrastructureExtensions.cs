@@ -32,9 +32,9 @@ internal static class ApiInfrastructureExtensions
         else
         {
             app.UseHsts();
+            app.UseHttpsRedirection();
         }
 
-        app.UseHttpsRedirection();
         app.UseCors(FrontendCorsPolicy);
         app.MapHealthChecks("/health");
 
