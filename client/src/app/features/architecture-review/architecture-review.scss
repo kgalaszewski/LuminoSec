@@ -1,0 +1,83 @@
+.feature-card label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.feature-card textarea {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.75rem;
+  resize: vertical;
+}
+
+.feature-card button {
+  align-self: flex-start;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 8px;
+  color: var(--color-accent-contrast);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.6rem 1.25rem;
+}
+
+.feature-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: var(--color-danger);
+  font-size: 0.9rem;
+}
+
+.result {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.result__score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.result__score-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.result__score-value--secure {
+  color: var(--color-success);
+}
+
+.result__score-value--warning {
+  color: var(--color-warning);
+}
+
+.result__score-value--critical {
+  color: var(--color-danger);
+}
+
+.result__score-label {
+  color: var(--color-text-muted);
+}
+
+.result__summary {
+  margin: 0;
+}
+
+.result__findings {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
