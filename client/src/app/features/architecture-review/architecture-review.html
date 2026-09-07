@@ -1,0 +1,41 @@
+<section class="feature-card">
+  <label for="description">Describe your architecture</label>
+  <textarea
+    id="description"
+    rows="4"
+    [value]="description()"
+    (input)="onDescriptionInput($any($event.target).value)"
+  ></textarea>
+
+  <button type="button" (click)="runAnalysis()" [disabled]="isAnalyzing()">
+    @if (isAnalyzing()) {
+      Analyzing…
+    } @else {
+      Run analysis
+    }
+  </button>
+
+  @if (errorMessage()) {
+    <p class="error">{{ errorMessage() }}</p>
+  }
+
+  @if (result(); as r) {
+    <div class="result">
+      <div class="result__score">
+        <span
+          class="result__score-value"
+          [class.result__score-value--secure]="r.securityRating === 'Secure'"
+          [class.result__score-value--warning]="r.securityRating === 'Needs Improvement'"
+          [class.result__score-value--critical]="r.securityRating === 'Critical'"
+        >{{ r.securityScore }}</span>
+        <span class="result__score-label">/ 100 — {{ r.securityRating }}</span>
+      </div>
+      <p class="result__summary">{{ r.aiSummary }}</p>
+      <ul class="result__findings">
+        @for (finding of r.findings; track finding) {
+          <li>{{ finding }}</li>
+        }
+      </ul>
+    </div>
+  }
+</section>

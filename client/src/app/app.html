@@ -26,45 +26,35 @@
       of bugs, incidents and alerts — in plain language.
     </p>
 
-    <section class="analyze-card">
-      <label for="description">Describe your architecture</label>
-      <textarea
-        id="description"
-        rows="4"
-        [value]="description()"
-        (input)="onDescriptionInput($any($event.target).value)"
-      ></textarea>
-
-      <button type="button" (click)="runAnalysis()" [disabled]="isAnalyzing()">
-        @if (isAnalyzing()) {
-          Analyzing…
-        } @else {
-          Run analysis
-        }
+    <div class="tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        class="tabs__item"
+        [class.tabs__item--active]="activeTab() === 'architecture-review'"
+        (click)="setActiveTab('architecture-review')"
+      >
+        Architecture Reviewer
       </button>
+      <button
+        type="button"
+        role="tab"
+        class="tabs__item"
+        [class.tabs__item--active]="activeTab() === 'incident-responder'"
+        (click)="setActiveTab('incident-responder')"
+      >
+        Incident Responder
+      </button>
+    </div>
 
-      @if (errorMessage()) {
-        <p class="error">{{ errorMessage() }}</p>
-      }
-
-      @if (result(); as r) {
-        <div class="result">
-          <div class="result__score">
-            <span class="result__score-value">{{ r.securityScore }}</span>
-            <span class="result__score-label">/ 100</span>
-          </div>
-          <p class="result__summary">{{ r.aiSummary }}</p>
-          <ul class="result__findings">
-            @for (finding of r.findings; track finding) {
-              <li>{{ finding }}</li>
-            }
-          </ul>
-        </div>
-      }
-    </section>
+    @if (activeTab() === 'architecture-review') {
+      <app-architecture-review />
+    } @else {
+      <app-incident-responder />
+    }
   </main>
 
   <footer class="page__footer">
-    <p>LuminoSec — portfolio project. AI responses shown here are currently mocked.</p>
+    <p>LuminoSec — portfolio project. The AI summary is a real AWS Bedrock (Claude) call; the findings list below it is still a placeholder rules engine.</p>
   </footer>
 </div>
