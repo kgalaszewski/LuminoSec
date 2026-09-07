@@ -15,6 +15,13 @@
     <!-- Pins the transitive Microsoft.OpenApi dependency past GHSA-v5pm-xwqc-g5wc
          (stack-overflow DoS on circular schema refs), fixed in 2.7.5+. -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.101.5" />
+    <!-- Needed at runtime to resolve credentials for a profile chain that
+         bottoms out in an `aws login` (login_session) profile. -->
+    <PackageReference Include="AWSSDK.Signin" Version="4.0.101.9" />
+    <!-- Needed at runtime for AssumeRoleAWSCredentials (role_arn +
+         source_profile chaining) to call sts:AssumeRole. -->
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.100.12" />
   </ItemGroup>
 
   <ItemGroup>

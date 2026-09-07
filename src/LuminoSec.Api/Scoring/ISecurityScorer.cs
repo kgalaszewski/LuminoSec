@@ -5,4 +5,6 @@ namespace LuminoSec.Api.Scoring;
 internal interface ISecurityScorer
 {
     int Score(IReadOnlyList<RuleFinding> findings);
+
+    string Rate(int score);
 }
